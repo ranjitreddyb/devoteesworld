@@ -1,0 +1,1 @@
+//# sourceMappingURL=bookings.model.js.map
