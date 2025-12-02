@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "home": "Home",
+    "events": "Events",
+    "astrology": "Astrology",
+    "retail": "Retail",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "admin": "Admin"
+  },
+  "home": {
+    "tagline": "Book community events and celebrations",
+    "todaySignificance": "Today's Significance",
+    "muhurtams": "Muhurtams",
+    "recommendedPoojas": "Recommended Poojas",
+    "upcomingEvents": "Upcoming Events",
+    "viewAllEvents": "View All Events"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "loginSuccess": "Logged in successfully!",
+    "loginError": "Login failed. Please check your credentials.",
+    "noAccount": "Don't have an account?",
+    "alreadyAccount": "Already have an account?"
+  },
+  "form": {
+    "email": "Email",
+    "password": "Password",
+    "name": "Full Name",
+    "phone": "Phone Number",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  },
+  "common": {
+    "loading": "Loading...",
+    "poojas": "Poojas",
+    "attendees": "Attendees",
+    "viewDetails": "View Details",
+    "book": "Book",
+    "success": "Success!",
+    "error": "Error"
+  },
+  "footer": {
+    "help": "Help",
+    "about": "About",
+    "follow": "Follow Us",
+    "links": "Links",
+    "faq": "FAQ",
+    "contact": "Contact Us",
+    "support": "Support",
+    "aboutUs": "About Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions"
+  }
+}
