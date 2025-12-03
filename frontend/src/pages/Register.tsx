@@ -1,20 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register } = useAuthStore();
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    name: '',
+    phoneNumber: '',
     dateOfBirth: '',
     address: '',
-    phoneNumber: '',
     maritalStatus: 'single',
     healthStatus: {
       diabetic: false,
@@ -23,88 +19,136 @@ export default function Register() {
       recentSurgery: false,
     },
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      const [key, field] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [key]: {
-          ...((prev as any)[key as keyof typeof formData] || {}),
-          [field]: (e.target as HTMLInputElement).checked,
-        },
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleHealthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData({
+      ...formData,
+      healthStatus: { ...formData.healthStatus, [name]: checked },
+    });
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match!');
-      return;
-    }
     setLoading(true);
+
     try {
-      const { confirmPassword, ...submitData } = formData;
-      await register(submitData);
-      toast.success('Registration successful!');
-      navigate('/dashboard');
+      const response = await fetch('http://localhost:3000/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      console.log('Response:', data);
+
+      if (response.ok) {
+        toast.success('✅ Registration successful!');
+        navigate('/dashboard');
+      } else {
+        toast.error(data.message || '❌ Registration failed');
+      }
     } catch (error: any) {
-      toast.error(error.message || 'Registration failed');
+      console.error('Error:', error);
+      toast.error('❌ Error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto bg-white shadow rounded p-8">
-        <h1 className="text-3xl font-bold mb-6">Create Account</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="px-4 py-2 border rounded" required />
-            <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} className="px-4 py-2 border rounded" required />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="px-4 py-2 border rounded" required />
-            <input type="password" name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} className="px-4 py-2 border rounded" required />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className="px-4 py-2 border rounded" required />
-            <input type="tel" name="phoneNumber" placeholder="+919876543210" value={formData.phoneNumber} onChange={handleChange} className="px-4 py-2 border rounded" required />
-          </div>
-          <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} className="w-full px-4 py-2 border rounded" required />
-          
-          <div className="bg-gray-50 p-4 rounded">
-            <h3 className="font-semibold mb-3">Health Status</h3>
-            <label className="flex items-center mb-2">
-              <input type="checkbox" name="healthStatus.diabetic" checked={formData.healthStatus.diabetic} onChange={handleChange} className="mr-2" />
-              Diabetic
-            </label>
-            <label className="flex items-center mb-2">
-              <input type="checkbox" name="healthStatus.bp" checked={formData.healthStatus.bp} onChange={handleChange} className="mr-2" />
-              High BP
-            </label>
-            <label className="flex items-center mb-2">
-              <input type="checkbox" name="healthStatus.heartAilment" checked={formData.healthStatus.heartAilment} onChange={handleChange} className="mr-2" />
-              Heart Ailment
-            </label>
-            <label className="flex items-center">
-              <input type="checkbox" name="healthStatus.recentSurgery" checked={formData.healthStatus.recentSurgery} onChange={handleChange} className="mr-2" />
-              Recent Surgery
-            </label>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, rgb(147, 51, 234), rgb(249, 115, 22))', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div style={{ background: 'white', padding: '3rem', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)', maxWidth: '550px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+        <h1 style={{ textAlign: 'center', fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'rgb(31, 41, 55)' }}>📝 Register</h1>
+        <p style={{ textAlign: 'center', color: 'rgb(107, 114, 128)', marginBottom: '2rem', fontSize: '0.95rem' }}>Join DevoteesWorld</p>
+
+        <form onSubmit={handleRegister} style={{ width: '100%' }}>
+          {/* Full Name */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>👤 Full Name</label>
+            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Full name" style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }} required />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full px-6 py-3 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 font-semibold">
-            {loading ? 'Creating...' : 'Create Account'}
+          {/* Email */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>📧 Email</label>
+            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }} required />
+          </div>
+
+          {/* Phone */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>📱 Phone</label>
+            <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+919876543210" style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }} required />
+          </div>
+
+          {/* Date of Birth */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>📅 Date of Birth</label>
+            <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }} required />
+          </div>
+
+          {/* Address */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>📍 Address</label>
+            <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Address" style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* Marital Status */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>💑 Marital Status</label>
+            <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box', backgroundColor: 'white' }}>
+              <option value="single">Single</option>
+              <option value="married">Married</option>
+              <option value="divorced">Divorced</option>
+              <option value="widowed">Widowed</option>
+            </select>
+          </div>
+
+          {/* Health Status - Checkboxes */}
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgb(249, 250, 251)', borderRadius: '0.75rem', border: '1px solid rgb(229, 231, 235)' }}>
+            <label style={{ display: 'block', fontWeight: '600', color: 'rgb(31, 41, 55)', marginBottom: '1rem' }}>🏥 Health Status</label>
+            
+            <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center' }}>
+              <input type="checkbox" name="diabetic" checked={formData.healthStatus.diabetic} onChange={handleHealthChange} style={{ marginRight: '0.5rem', cursor: 'pointer' }} />
+              <label style={{ cursor: 'pointer', margin: 0 }}>Diabetic</label>
+            </div>
+
+            <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center' }}>
+              <input type="checkbox" name="bp" checked={formData.healthStatus.bp} onChange={handleHealthChange} style={{ marginRight: '0.5rem', cursor: 'pointer' }} />
+              <label style={{ cursor: 'pointer', margin: 0 }}>High Blood Pressure</label>
+            </div>
+
+            <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center' }}>
+              <input type="checkbox" name="heartAilment" checked={formData.healthStatus.heartAilment} onChange={handleHealthChange} style={{ marginRight: '0.5rem', cursor: 'pointer' }} />
+              <label style={{ cursor: 'pointer', margin: 0 }}>Heart Ailment</label>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <input type="checkbox" name="recentSurgery" checked={formData.healthStatus.recentSurgery} onChange={handleHealthChange} style={{ marginRight: '0.5rem', cursor: 'pointer' }} />
+              <label style={{ cursor: 'pointer', margin: 0 }}>Recent Surgery</label>
+            </div>
+          </div>
+
+          {/* Password */}
+          <div style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>🔑 Password</label>
+            <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Password" style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }} required />
+          </div>
+
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '0.875rem', background: loading ? 'rgb(200, 200, 200)' : 'linear-gradient(to right, rgb(249, 115, 22), rgb(147, 51, 234))', color: 'white', border: 'none', borderRadius: '0.75rem', fontWeight: 'bold', fontSize: '1.05rem', cursor: loading ? 'not-allowed' : 'pointer' }}>
+            {loading ? '⏳ Registering...' : '✨ Register'}
           </button>
         </form>
+
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', borderTop: '1px solid rgb(229, 231, 235)', paddingTop: '1.5rem' }}>
+          <p style={{ color: 'rgb(107, 114, 128)', margin: 0 }}>Already have an account? <a href="/login" style={{ color: 'rgb(249, 115, 22)', fontWeight: 'bold' }}>Login here</a></p>
+        </div>
       </div>
     </div>
   );

@@ -14,7 +14,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
 const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
 const create_user_dto_1 = require("../users/dto/create-user.dto");
@@ -25,11 +24,9 @@ let AuthController = class AuthController {
     async register(createUserDto) {
         return this.authService.register(createUserDto);
     }
-    async login(req) {
-        console.log('✅ Login request received for user:', req.user.email);
-        const result = this.authService.login(req.user);
-        console.log('✅ Login response:', result);
-        return result;
+    async login(loginDto) {
+        console.log('📧 Login attempt for:', loginDto.email);
+        return this.authService.loginDirect(loginDto.email, loginDto.password);
     }
     async registerGuest(createUserDto) {
         return this.authService.registerGuest(createUserDto);
@@ -47,16 +44,15 @@ __decorate([
 __decorate([
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(200),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
-    (0, swagger_1.ApiOperation)({ summary: 'User login' }),
-    __param(0, (0, common_1.Request)()),
+    (0, swagger_1.ApiOperation)({ summary: 'User login - Direct' }),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('register-guest'),
-    (0, swagger_1.ApiOperation)({ summary: 'Guest registration without authentication' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Guest registration' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),

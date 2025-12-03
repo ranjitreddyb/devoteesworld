@@ -6,7 +6,7 @@ export declare class UsersService {
     constructor(userModel: Model<UserDocument>);
     create(createUserDto: CreateUserDto & {
         role: string;
-    }): Promise<import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<any, any, any> & {
+    }, skipPasswordHash?: boolean): Promise<import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<any, any, any> & {
         _id: import("mongoose").Types.ObjectId;
     }>;
     findByEmail(email: string): Promise<import("mongoose").Document<unknown, {}, UserDocument> & User & import("mongoose").Document<any, any, any> & {

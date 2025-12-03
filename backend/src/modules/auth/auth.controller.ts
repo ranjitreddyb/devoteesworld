@@ -1,5 +1,4 @@
-import { Controller, Post, Body, Request, UseGuards, HttpCode } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -17,17 +16,14 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  @UseGuards(AuthGuard('local'))
-  @ApiOperation({ summary: 'User login' })
-  async login(@Request() req) {
-    console.log('✅ Login request received for user:', req.user.email);
-    const result = this.authService.login(req.user);
-    console.log('✅ Login response:', result);
-    return result;
+  @ApiOperation({ summary: 'User login - Direct' })
+  async login(@Body() loginDto: { email: string; password: string }) {
+    console.log('📧 Login attempt for:', loginDto.email);
+    return this.authService.loginDirect(loginDto.email, loginDto.password);
   }
 
   @Post('register-guest')
-  @ApiOperation({ summary: 'Guest registration without authentication' })
+  @ApiOperation({ summary: 'Guest registration' })
   async registerGuest(@Body() createUserDto: CreateUserDto) {
     return this.authService.registerGuest(createUserDto);
   }

@@ -19,16 +19,18 @@ export class AuthService {
         throw new BadRequestException('User already exists');
       }
 
-      // Hash password
-      const salt = await bcrypt.genSalt();
-      const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+      // Hash password HERE
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      // Create user with role
-      const user = await this.usersService.create({
-        ...createUserDto,
-        password: hashedPassword,
-        role: 'user', // Default role
-      });
+      // Create user with ALREADY HASHED password - skip double hashing
+      const user = await this.usersService.create(
+        {
+          ...createUserDto,
+          password: hashedPassword,
+          role: 'user',
+        },
+        true  // ← skipPasswordHash = true
+      );
 
       // Generate token
       const payload = {
@@ -81,6 +83,51 @@ export class AuthService {
     } catch (error) {
       console.error('❌ Login error:', error);
       throw error;
+    }
+  }
+
+  async loginDirect(email: string, password: string) {
+    try {
+      console.log('🔍 Direct login for:', email);
+      
+      const user = await this.usersService.findByEmail(email);
+      if (!user) {
+        console.log('❌ User not found:', email);
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      console.log('🔐 Comparing passwords...');
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      
+      if (!isPasswordValid) {
+        console.log('❌ Password mismatch');
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      console.log('✅ Password match! Logging in:', email);
+      
+      const payload = {
+        email: user.email,
+        sub: user._id,
+        role: user.role,
+      };
+
+      const result = {
+        access_token: this.jwtService.sign(payload),
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          phoneNumber: user.phoneNumber,
+          role: user.role,
+        },
+      };
+
+      console.log('✅ Direct login successful');
+      return result;
+    } catch (error) {
+      console.error('❌ Direct login error:', error);
+      throw new UnauthorizedException('Invalid credentials');
     }
   }
 

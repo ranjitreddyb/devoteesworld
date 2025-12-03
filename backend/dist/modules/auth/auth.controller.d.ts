@@ -13,14 +13,17 @@ export declare class AuthController {
             role: string;
         };
     }>;
-    login(req: any): Promise<{
+    login(loginDto: {
+        email: string;
+        password: string;
+    }): Promise<{
         access_token: string;
         user: {
             id: any;
-            email: any;
-            name: any;
-            phoneNumber: any;
-            role: any;
+            email: string;
+            name: string;
+            phoneNumber: string;
+            role: string;
         };
     }>;
     registerGuest(createUserDto: CreateUserDto): Promise<{

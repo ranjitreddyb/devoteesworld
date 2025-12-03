@@ -1,239 +1,175 @@
 import { useEffect, useState } from 'react';
-import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-
-interface Booking {
-  id: number;
-  eventTitle: string;
-  pooja: string;
-  date: string;
-  venue: string;
-  status: string;
-  amount: number;
-}
-
-interface UpcomingEvent {
-  id: number;
-  title: string;
-  date: string;
-  venue: string;
-  status: string;
-}
+import { storage } from '../services/storage-service';
+import apiService from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
-  const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const user = storage.getUser();
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('profile');
 
   useEffect(() => {
-    // Fetch user bookings and events
-    const fetchData = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchEvents = async () => {
       try {
-        // Fetch bookings (mock for now)
-        setBookings([
-          {
-            id: 1,
-            eventTitle: 'Sunday Surya Puja',
-            pooja: 'Surya Puja',
-            date: '2025-12-07',
-            venue: 'Main Temple',
-            status: 'confirmed',
-            amount: 500,
-          },
-          {
-            id: 2,
-            eventTitle: 'Monthly Hanuman Chalisa',
-            pooja: 'Hanuman Chalisa',
-            date: '2025-12-14',
-            venue: 'Meditation Hall',
-            status: 'pending',
-            amount: 300,
-          },
-        ]);
-
-        // Fetch upcoming events
-        setUpcomingEvents([
-          {
-            id: 1,
-            title: 'Maghamaasam Festival',
-            date: '2025-12-20',
-            venue: 'Main Temple',
-            status: 'upcoming',
-          },
-          {
-            id: 2,
-            title: 'New Moon Puja',
-            date: '2025-12-25',
-            venue: 'Meditation Hall',
-            status: 'upcoming',
-          },
-        ]);
-
-        setLoading(false);
+        const response = await apiService.get('/events');
+        setEvents(response.data || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Failed to fetch events:', error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [user]);
+    fetchEvents();
+  }, []);
 
   if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <p className="text-center text-gray-600">Please login to view your dashboard</p>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Welcome, {user.name}!</h1>
-        <p className="text-gray-600">Manage your bookings and explore upcoming events</p>
-      </div>
+    <div style={{ minHeight: '100vh', width: '100%', background: 'linear-gradient(to bottom, rgb(245, 245, 245), rgb(255, 255, 255))', overflowX: 'hidden' }}>
+      <main style={{ padding: '2rem 1rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+        <div style={{
+          background: 'linear-gradient(to right, rgb(249, 115, 22), rgb(147, 51, 234))',
+          padding: '2rem',
+          borderRadius: '1rem',
+          color: 'white',
+          marginBottom: '2rem',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', margin: '0 0 0.5rem 0' }}>
+            👋 Welcome, {user?.name}!
+          </h1>
+          <p style={{ margin: 0, opacity: 0.9 }}>
+            Explore spiritual services and connect with the community
+          </p>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b">
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`px-4 py-2 font-semibold ${
-            activeTab === 'profile'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-orange-600'
-          }`}
-        >
-          Profile
-        </button>
-        <button
-          onClick={() => setActiveTab('bookings')}
-          className={`px-4 py-2 font-semibold ${
-            activeTab === 'bookings'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-orange-600'
-          }`}
-        >
-          My Bookings
-        </button>
-        <button
-          onClick={() => setActiveTab('events')}
-          className={`px-4 py-2 font-semibold ${
-            activeTab === 'events'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-orange-600'
-          }`}
-        >
-          Upcoming Events
-        </button>
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <p className="text-center text-gray-600">Loading...</p>
-      ) : (
-        <>
-          {/* Profile Tab */}
-          {activeTab === 'profile' && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4">Profile Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm text-gray-600">Full Name</label>
-                  <p className="text-lg font-semibold">{user.name}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Email</label>
-                  <p className="text-lg font-semibold">{user.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Phone Number</label>
-                  <p className="text-lg font-semibold">{user.phoneNumber || 'Not provided'}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Role</label>
-                  <p className="text-lg font-semibold capitalize">{user.role || 'user'}</p>
-                </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '1.5rem',
+          marginBottom: '2rem',
+        }}>
+          {[
+            { icon: '🏛️', label: 'Temples', value: '2,500+' },
+            { icon: '🙏', label: 'Services', value: '5,000+' },
+            { icon: '👥', label: 'Devotees', value: '50K+' },
+            { icon: '📅', label: 'Events', value: events.length },
+          ].map((stat, idx) => (
+            <div
+              key={idx}
+              style={{
+                background: 'white',
+                padding: '1.5rem',
+                borderRadius: '1rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgb(229, 231, 235)',
+                textAlign: 'center',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{stat.icon}</div>
+              <div style={{ color: 'rgb(107, 114, 128)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                {stat.label}
               </div>
-              <button
-                onClick={() => navigate('/events')}
-                className="mt-6 px-6 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
-              >
-                Browse Events
-              </button>
+              <div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: 'rgb(31, 41, 55)' }}>
+                {stat.value}
+              </div>
             </div>
-          )}
+          ))}
+        </div>
 
-          {/* Bookings Tab */}
-          {activeTab === 'bookings' && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4">My Bookings</h2>
-              {bookings.length === 0 ? (
-                <p className="text-gray-600">No bookings yet. <button onClick={() => navigate('/events')} className="text-orange-600 hover:underline">Browse events</button> to make your first booking!</p>
-              ) : (
-                <div className="space-y-4">
-                  {bookings.map(booking => (
-                    <div key={booking.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-lg font-semibold">{booking.eventTitle}</h3>
-                          <p className="text-gray-600">🕉️ {booking.pooja}</p>
-                          <p className="text-sm text-gray-500">📅 {new Date(booking.date).toLocaleDateString()}</p>
-                          <p className="text-sm text-gray-500">📍 {booking.venue}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            booking.status === 'confirmed'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {booking.status.toUpperCase()}
-                          </span>
-                          <p className="text-lg font-bold text-orange-600 mt-2">₹{booking.amount}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+        <div style={{
+          background: 'white',
+          borderRadius: '1rem',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          border: '1px solid rgb(229, 231, 235)',
+          overflow: 'hidden',
+          marginBottom: '2rem',
+        }}>
+          <div style={{
+            background: 'linear-gradient(to right, rgb(249, 115, 22), rgb(147, 51, 234))',
+            padding: '1.5rem',
+            color: 'white',
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
+              📅 Upcoming Events
+            </h2>
+          </div>
 
-          {/* Events Tab */}
-          {activeTab === 'events' && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
-              {upcomingEvents.length === 0 ? (
-                <p className="text-gray-600">No upcoming events</p>
-              ) : (
-                <div className="space-y-4">
-                  {upcomingEvents.map(event => (
-                    <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-lg font-semibold">{event.title}</h3>
-                          <p className="text-sm text-gray-500">📅 {new Date(event.date).toLocaleDateString()}</p>
-                          <p className="text-sm text-gray-500">📍 {event.venue}</p>
-                        </div>
-                        <button
-                          onClick={() => navigate(`/events/1`)}
-                          className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
+          <div style={{ padding: '1.5rem' }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'rgb(107, 114, 128)' }}>
+                <p>⏳ Loading events...</p>
+              </div>
+            ) : events.length > 0 ? (
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {events.map((event: any, idx: number) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: '1.5rem',
+                      background: 'rgb(249, 250, 251)',
+                      borderRadius: '0.75rem',
+                      border: '1px solid rgb(229, 231, 235)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = 'rgb(243, 244, 246)';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = 'rgb(249, 250, 251)';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateX(0)';
+                    }}
+                  >
+                    <h3 style={{ margin: '0 0 0.5rem 0', color: 'rgb(31, 41, 55)', fontSize: '1.125rem' }}>
+                      {event.title}
+                    </h3>
+                    <p style={{ margin: '0 0 0.5rem 0', color: 'rgb(107, 114, 128)', fontSize: '0.875rem' }}>
+                      {event.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'rgb(107, 114, 128)' }}>
+                <p>🎪 No events available</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <footer style={{
+        background: 'rgb(17, 24, 39)',
+        color: 'rgb(209, 213, 219)',
+        padding: '3rem 1rem',
+        marginTop: '3rem',
+        width: '100%',
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center', fontSize: '0.875rem' }}>
+          <p style={{ margin: 0 }}>© 2025 DevoteesWorld. All rights reserved. 🙏</p>
+        </div>
+      </footer>
     </div>
   );
 }

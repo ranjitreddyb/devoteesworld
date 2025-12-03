@@ -55,11 +55,15 @@ let UsersService = class UsersService {
     constructor(userModel) {
         this.userModel = userModel;
     }
-    async create(createUserDto) {
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    async create(createUserDto, skipPasswordHash = false) {
+        let passwordToSave = createUserDto.password;
+        // Only hash if not already hashed (flag to skip hashing)
+        if (!skipPasswordHash) {
+            passwordToSave = await bcrypt.hash(createUserDto.password, 10);
+        }
         const user = new this.userModel({
             ...createUserDto,
-            password: hashedPassword,
+            password: passwordToSave,
         });
         return user.save();
     }

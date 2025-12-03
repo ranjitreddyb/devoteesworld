@@ -46,29 +46,46 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-  login: async (email: string, password: string) => {
+  login: async (emailOrUser: string | any, passwordOrToken?: string) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/auth/login', { 
-        email, 
-        password 
-      });
-      
-      console.log('✅ Login response:', response.data);
-      
-      const { access_token, user } = response.data;
-
+      // Handle both direct API call and store method call
+      let access_token: string;
+      let user: User;
+  
+      // If called from authStore directly (email, password)
+      if (typeof emailOrUser === 'string' && passwordOrToken) {
+        const response = await axios.post('http://localhost:3000/api/v1/auth/login', {
+          email: emailOrUser,
+          password: passwordOrToken,
+        });
+  
+        console.log('✅ Login response:', response.data);
+  
+        access_token = response.data.access_token;
+        user = response.data.user;
+      }
+      // If called from Login.tsx with user object and token
+      else if (typeof emailOrUser === 'object' && typeof passwordOrToken === 'string') {
+        access_token = passwordOrToken;
+        user = emailOrUser;
+      } else {
+        throw new Error('Invalid login parameters');
+      }
+  
       if (!access_token || !user) {
         throw new Error('Invalid login response');
       }
-
+  
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+  
       set({
         user,
         token: access_token,
         isAuthenticated: true,
       });
+  
+      console.log('✅ Login successful for:', user.email);
     } catch (error: any) {
       console.error('❌ Login error:', error);
       throw new Error(error.response?.data?.message || 'Login failed');

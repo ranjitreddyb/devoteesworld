@@ -25,6 +25,16 @@ export declare class AuthService {
             role: any;
         };
     }>;
+    loginDirect(email: string, password: string): Promise<{
+        access_token: string;
+        user: {
+            id: any;
+            email: string;
+            name: string;
+            phoneNumber: string;
+            role: string;
+        };
+    }>;
     validateUser(email: string, password: string): Promise<import("mongoose").Document<unknown, {}, import("../../database/models/user.model").UserDocument> & import("../../database/models/user.model").User & import("mongoose").Document<any, any, any> & {
         _id: import("mongoose").Types.ObjectId;
     }>;
