@@ -15,32 +15,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventsController = void 0;
 const common_1 = require("@nestjs/common");
 const events_service_1 = require("./events.service");
+const create_event_dto_1 = require("./dto/create-event.dto");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let EventsController = class EventsController {
     constructor(eventsService) {
         this.eventsService = eventsService;
     }
-    async findAll(filters) {
-        return this.eventsService.findAll(filters);
+    async findAll() {
+        return this.eventsService.findAll();
     }
-    async findById(id) {
-        return this.eventsService.findById(id);
+    async findOne(id) {
+        return this.eventsService.findOne(id);
     }
-    async create(createEventDto) {
-        return this.eventsService.create(createEventDto);
+    async create(createEventDto, req) {
+        console.log('📅 Admin creating event:', createEventDto.title);
+        const event = await this.eventsService.create(createEventDto);
+        console.log('✅ Event created:', event._id);
+        return event;
     }
-    async update(id, updateEventDto) {
+    async update(id, updateEventDto, req) {
+        console.log('✏️ Admin updating event:', id);
         return this.eventsService.update(id, updateEventDto);
     }
-    async delete(id) {
-        return this.eventsService.delete(id);
+    async delete(id, req) {
+        console.log('🗑️ Admin deleting event:', id);
+        await this.eventsService.delete(id);
+        return { message: 'Event deleted' };
     }
 };
 exports.EventsController = EventsController;
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "findAll", null);
 __decorate([
@@ -49,27 +56,35 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], EventsController.prototype, "findById", null);
+], EventsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(201),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [create_event_dto_1.CreateEventDto, Object]),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "delete", null);
 exports.EventsController = EventsController = __decorate([

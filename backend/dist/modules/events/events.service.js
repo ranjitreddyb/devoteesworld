@@ -16,77 +16,35 @@ exports.EventsService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
+const event_model_1 = require("../../database/models/event.model");
 let EventsService = class EventsService {
     constructor(eventModel) {
         this.eventModel = eventModel;
     }
-    async findAll(filters) {
-        try {
-            let query = this.eventModel.find();
-            if (filters?.status) {
-                query = query.where('status').equals(filters.status);
-            }
-            if (filters?.venue) {
-                query = query.where('venue').regex(new RegExp(filters.venue, 'i'));
-            }
-            // Don't try to populate priests - just return events directly
-            const events = await query.exec();
-            return events;
-        }
-        catch (error) {
-            throw new common_1.BadRequestException('Error fetching events');
-        }
+    async findAll() {
+        return this.eventModel.find({ isActive: true }).exec();
     }
-    async findById(id) {
-        try {
-            const event = await this.eventModel.findById(id).exec();
-            if (!event) {
-                throw new common_1.NotFoundException('Event not found');
-            }
-            return event;
-        }
-        catch (error) {
-            throw new common_1.NotFoundException('Event not found');
-        }
+    async findOne(id) {
+        return this.eventModel.findById(id).exec();
     }
     async create(createEventDto) {
-        try {
-            const event = await this.eventModel.create(createEventDto);
-            return event;
-        }
-        catch (error) {
-            throw new common_1.BadRequestException('Error creating event');
-        }
+        const event = new this.eventModel({
+            ...createEventDto,
+            isActive: true,
+        });
+        return event.save();
     }
     async update(id, updateEventDto) {
-        try {
-            const event = await this.eventModel.findByIdAndUpdate(id, updateEventDto, { new: true });
-            if (!event) {
-                throw new common_1.NotFoundException('Event not found');
-            }
-            return event;
-        }
-        catch (error) {
-            throw new common_1.BadRequestException('Error updating event');
-        }
+        return this.eventModel.findByIdAndUpdate(id, updateEventDto, { new: true }).exec();
     }
     async delete(id) {
-        try {
-            const event = await this.eventModel.findByIdAndDelete(id);
-            if (!event) {
-                throw new common_1.NotFoundException('Event not found');
-            }
-            return { message: 'Event deleted successfully' };
-        }
-        catch (error) {
-            throw new common_1.BadRequestException('Error deleting event');
-        }
+        return this.eventModel.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
     }
 };
 exports.EventsService = EventsService;
 exports.EventsService = EventsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)('Event')),
+    __param(0, (0, mongoose_1.InjectModel)(event_model_1.Event.name)),
     __metadata("design:paramtypes", [mongoose_2.Model])
 ], EventsService);
 //# sourceMappingURL=events.service.js.map

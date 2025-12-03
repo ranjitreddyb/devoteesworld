@@ -34,7 +34,7 @@ function App() {
             <Route path="/astrology" element={<Astrology />} />
             <Route path="/retail" element={<Retail />} />
 
-            {/* Auth routes - NO REDIRECT, just show the form */}
+            {/* Auth routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
@@ -52,13 +52,13 @@ function App() {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute requireAdmin>
+                <ProtectedRoute requireAdmin={true}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
             />
 
-            {/* Catch all - redirect to home */}
+            {/* Catch all */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

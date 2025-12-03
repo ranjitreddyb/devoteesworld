@@ -1,32 +1,38 @@
-// src/components/ProtectedRoute.tsx
-// Route protection component - redirects unauthenticated users
-
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuthStore } from '../store/authStore';
 
-interface ProtectedRouteProps {
+interface Props {
   children: React.ReactNode;
   requireAdmin?: boolean;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requireAdmin = false 
-}) => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+export function ProtectedRoute({ children, requireAdmin = false }: Props) {
+  const { user, isAuthenticated, initializeAuth } = useAuthStore();
+  const [ready, setReady] = useState(false);
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  useEffect(() => {
+    console.log('🔐 ProtectedRoute - initializing auth');
+    initializeAuth();
+    setReady(true);
+  }, [initializeAuth]);
+
+  if (!ready) {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>⏳ Loading...</div>;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  console.log('🔐 ProtectedRoute - user:', user, 'requireAdmin:', requireAdmin, 'role:', user?.role);
+
+  if (!isAuthenticated || !user) {
+    console.log('❌ Not authenticated, redirecting to login');
+    return <Navigate to="/login" />;
   }
 
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/home" replace />;
+  if (requireAdmin && user.role !== 'admin') {
+    console.log('❌ Not admin, redirecting to dashboard');
+    return <Navigate to="/dashboard" />;
   }
 
+  console.log('✅ ProtectedRoute - access granted');
   return <>{children}</>;
-};
+}
