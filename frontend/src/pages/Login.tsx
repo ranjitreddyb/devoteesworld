@@ -1,28 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      console.log('Attempting login with:', email);
-      
       const response = await fetch('http://localhost:3000/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,24 +20,22 @@ export default function Login() {
       });
 
       const data = await response.json();
-      console.log('Response:', data);
 
       if (response.ok && data.access_token && data.user) {
-        // Store in localStorage
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        console.log('✅ Login successful, redirecting...');
+        console.log('✅ Login successful');
         toast.success('✅ Login successful!');
         
-        // Redirect to dashboard
+        // Force hard reload to reset auth state
         setTimeout(() => {
-          navigate('/dashboard');
+          window.location.href = '/dashboard';
         }, 500);
       } else {
         toast.error(data.message || '❌ Login failed');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error);
       toast.error('❌ Connection error');
     } finally {
@@ -75,14 +63,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                border: '2px solid rgb(229, 231, 235)',
-                borderRadius: '0.75rem',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-              }}
+              style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }}
               required
             />
           </div>
@@ -96,14 +77,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                border: '2px solid rgb(229, 231, 235)',
-                borderRadius: '0.75rem',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-              }}
+              style={{ width: '100%', padding: '0.75rem 1rem', border: '2px solid rgb(229, 231, 235)', borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box' }}
               required
             />
           </div>
@@ -111,17 +85,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.875rem',
-              background: loading ? 'rgb(200, 200, 200)' : 'linear-gradient(to right, rgb(249, 115, 22), rgb(147, 51, 234))',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.75rem',
-              fontWeight: 'bold',
-              fontSize: '1.05rem',
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
+            style={{ width: '100%', padding: '0.875rem', background: loading ? 'rgb(200, 200, 200)' : 'linear-gradient(to right, rgb(249, 115, 22), rgb(147, 51, 234))', color: 'white', border: 'none', borderRadius: '0.75rem', fontWeight: 'bold', fontSize: '1.05rem', cursor: loading ? 'not-allowed' : 'pointer' }}
           >
             {loading ? '⏳ Logging in...' : '✨ Login'}
           </button>

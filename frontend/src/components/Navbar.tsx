@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { storage } from '../services/storage-service';
+import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
 const navbarStyle: React.CSSProperties = {
@@ -65,14 +66,26 @@ const secondaryButtonStyle: React.CSSProperties = {
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const user = storage.getUser();
+  const { user, logout, initializeAuth } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    console.log('🔄 Navbar mounted, initializing auth...');
+    initializeAuth();
+    setMounted(true);
+  }, [initializeAuth]);
 
   const handleLogout = () => {
-    storage.clear();
+    logout();
     toast.success('Logged out successfully');
     navigate('/login');
   };
 
+  if (!mounted) {
+    return <nav style={navbarStyle}><div style={logoStyle}>🏛️ DevoteesWorld</div></nav>;
+  }
+
+  // Not authenticated
   if (!user) {
     return (
       <nav style={navbarStyle}>
@@ -85,11 +98,9 @@ export default function Navbar() {
             style={secondaryButtonStyle}
             onMouseOver={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-              e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             🔐 Login
@@ -99,11 +110,9 @@ export default function Navbar() {
             style={primaryButtonStyle}
             onMouseOver={(e) => {
               e.currentTarget.style.background = 'rgb(255, 245, 238)';
-              e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.background = 'white';
-              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             ✍️ Register
@@ -113,14 +122,13 @@ export default function Navbar() {
     );
   }
 
+  // Authenticated
   return (
     <nav style={navbarStyle}>
-      {/* Logo */}
       <div onClick={() => navigate('/dashboard')} style={logoStyle}>
         🏛️ DevoteesWorld
       </div>
 
-      {/* Center - User Info & Events */}
       <div style={navCenterStyle}>
         <span style={{ fontSize: '0.95rem' }}>👤 {user.name}</span>
         <button
@@ -128,11 +136,9 @@ export default function Navbar() {
           style={secondaryButtonStyle}
           onMouseOver={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            e.currentTarget.style.transform = 'scale(1.05)';
           }}
           onMouseOut={(e) => {
             e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.transform = 'scale(1)';
           }}
         >
           📅 Events
@@ -143,11 +149,9 @@ export default function Navbar() {
             style={secondaryButtonStyle}
             onMouseOver={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-              e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             ⚙️ Admin
@@ -155,18 +159,15 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Right - Logout */}
       <div style={navRightStyle}>
         <button
           onClick={handleLogout}
           style={primaryButtonStyle}
           onMouseOver={(e) => {
             e.currentTarget.style.background = 'rgb(255, 245, 238)';
-            e.currentTarget.style.transform = 'scale(1.05)';
           }}
           onMouseOut={(e) => {
             e.currentTarget.style.background = 'white';
-            e.currentTarget.style.transform = 'scale(1)';
           }}
         >
           🚪 Logout
