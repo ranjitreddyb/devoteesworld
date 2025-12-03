@@ -34,6 +34,8 @@ export class PaymentsService {
         throw new BadRequestException('Invalid eventId');
       }
 
+      console.log('💳 Creating Razorpay order:', { userId, eventId, amount });
+
       // Create Razorpay order
       const razorpayOrder = await this.razorpay.orders.create({
         amount: amount * 100, // Convert to paise
@@ -46,6 +48,8 @@ export class PaymentsService {
         },
       });
 
+      console.log('✅ Razorpay order created:', razorpayOrder.id);
+
       // Save payment record
       const payment = await this.paymentModel.create({
         userId: new Types.ObjectId(userId),
@@ -57,14 +61,15 @@ export class PaymentsService {
         status: 'pending',
       });
 
+      // ✅ Return with order_id (snake_case) so frontend can read it
       return {
-        orderId: razorpayOrder.id,
+        order_id: razorpayOrder.id,  // Changed from orderId to order_id
         amount,
         currency: 'INR',
         key: process.env.RAZORPAY_KEY_ID,
       };
-    } catch (error) {
-      console.error('Payment creation error:', error);
+    } catch (error: any) {
+      console.error('❌ Payment creation error:', error);
       throw new Error(`Failed to create order: ${error.message}`);
     }
   }
@@ -75,6 +80,8 @@ export class PaymentsService {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
         paymentData;
 
+      console.log('🔐 Verifying payment:', { razorpay_order_id, razorpay_payment_id });
+
       const body = razorpay_order_id + '|' + razorpay_payment_id;
       const expectedSignature = crypto
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -82,6 +89,7 @@ export class PaymentsService {
         .digest('hex');
 
       if (expectedSignature === razorpay_signature) {
+        console.log('✅ Payment signature verified');
         // Update payment status
         await this.paymentModel.updateOne(
           { razorpayOrderId: razorpay_order_id },
@@ -93,14 +101,15 @@ export class PaymentsService {
         );
         return { success: true, message: 'Payment verified successfully' };
       } else {
+        console.error('❌ Payment signature mismatch');
         await this.paymentModel.updateOne(
           { razorpayOrderId: razorpay_order_id },
           { status: 'failed', failureReason: 'Invalid signature' },
         );
         return { success: false, message: 'Invalid payment signature' };
       }
-    } catch (error) {
-      console.error('Payment verification error:', error);
+    } catch (error: any) {
+      console.error('❌ Payment verification error:', error);
       throw new Error(`Payment verification failed: ${error.message}`);
     }
   }
@@ -108,6 +117,8 @@ export class PaymentsService {
   // Create booking after successful payment
   async createBooking(paymentData: any) {
     try {
+      console.log('📋 Creating booking from payment:', paymentData);
+
       const payment = await this.paymentModel.findOne({
         razorpayOrderId: paymentData.razorpay_order_id,
       });
@@ -126,9 +137,10 @@ export class PaymentsService {
         bookingDate: new Date(),
       });
 
+      console.log('✅ Booking created:', booking._id);
       return booking;
-    } catch (error) {
-      console.error('Booking creation error:', error);
+    } catch (error: any) {
+      console.error('❌ Booking creation error:', error);
       throw new Error(`Failed to create booking: ${error.message}`);
     }
   }

@@ -73,6 +73,7 @@ let PaymentsService = class PaymentsService {
             if (!mongoose_2.Types.ObjectId.isValid(eventId)) {
                 throw new common_1.BadRequestException('Invalid eventId');
             }
+            console.log('💳 Creating Razorpay order:', { userId, eventId, amount });
             // Create Razorpay order
             const razorpayOrder = await this.razorpay.orders.create({
                 amount: amount * 100, // Convert to paise
@@ -84,6 +85,7 @@ let PaymentsService = class PaymentsService {
                     poojaIds: poojaIds.join(','),
                 },
             });
+            console.log('✅ Razorpay order created:', razorpayOrder.id);
             // Save payment record
             const payment = await this.paymentModel.create({
                 userId: new mongoose_2.Types.ObjectId(userId),
@@ -94,15 +96,16 @@ let PaymentsService = class PaymentsService {
                 razorpayOrderId: razorpayOrder.id,
                 status: 'pending',
             });
+            // ✅ Return with order_id (snake_case) so frontend can read it
             return {
-                orderId: razorpayOrder.id,
+                order_id: razorpayOrder.id, // Changed from orderId to order_id
                 amount,
                 currency: 'INR',
                 key: process.env.RAZORPAY_KEY_ID,
             };
         }
         catch (error) {
-            console.error('Payment creation error:', error);
+            console.error('❌ Payment creation error:', error);
             throw new Error(`Failed to create order: ${error.message}`);
         }
     }
@@ -110,12 +113,14 @@ let PaymentsService = class PaymentsService {
     async verifyPayment(paymentData) {
         try {
             const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = paymentData;
+            console.log('🔐 Verifying payment:', { razorpay_order_id, razorpay_payment_id });
             const body = razorpay_order_id + '|' + razorpay_payment_id;
             const expectedSignature = crypto
                 .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
                 .update(body)
                 .digest('hex');
             if (expectedSignature === razorpay_signature) {
+                console.log('✅ Payment signature verified');
                 // Update payment status
                 await this.paymentModel.updateOne({ razorpayOrderId: razorpay_order_id }, {
                     razorpayPaymentId: razorpay_payment_id,
@@ -125,18 +130,20 @@ let PaymentsService = class PaymentsService {
                 return { success: true, message: 'Payment verified successfully' };
             }
             else {
+                console.error('❌ Payment signature mismatch');
                 await this.paymentModel.updateOne({ razorpayOrderId: razorpay_order_id }, { status: 'failed', failureReason: 'Invalid signature' });
                 return { success: false, message: 'Invalid payment signature' };
             }
         }
         catch (error) {
-            console.error('Payment verification error:', error);
+            console.error('❌ Payment verification error:', error);
             throw new Error(`Payment verification failed: ${error.message}`);
         }
     }
     // Create booking after successful payment
     async createBooking(paymentData) {
         try {
+            console.log('📋 Creating booking from payment:', paymentData);
             const payment = await this.paymentModel.findOne({
                 razorpayOrderId: paymentData.razorpay_order_id,
             });
@@ -152,10 +159,11 @@ let PaymentsService = class PaymentsService {
                 status: 'confirmed',
                 bookingDate: new Date(),
             });
+            console.log('✅ Booking created:', booking._id);
             return booking;
         }
         catch (error) {
-            console.error('Booking creation error:', error);
+            console.error('❌ Booking creation error:', error);
             throw new Error(`Failed to create booking: ${error.message}`);
         }
     }

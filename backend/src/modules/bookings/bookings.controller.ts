@@ -7,6 +7,13 @@ import { BookingsService } from './bookings.service';
 export class BookingsController {
   constructor(private bookingsService: BookingsService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Get all bookings' })
+  async getAllBookings() {
+    console.log('📋 Fetching all bookings');
+    return this.bookingsService.getAllBookings();
+  }
+
   @Post('create')
   @ApiOperation({ summary: 'Create booking' })
   async createBooking(@Body() bookingData: any) {

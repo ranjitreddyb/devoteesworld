@@ -19,7 +19,7 @@ export default function EventDetails() {
 
   const fetchEvent = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/events/${id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/v1/events/${id}`);
       if (!response.ok) throw new Error('Event not found');
       const data = await response.json();
       setEvent(data);
@@ -48,7 +48,7 @@ export default function EventDetails() {
 
   const handlePayment = async () => {
     if (!isAuthenticated) {
-      toast.error('Please login to book');
+      toast.error('Please login first');
       navigate('/login');
       return;
     }
@@ -58,33 +58,43 @@ export default function EventDetails() {
       return;
     }
 
-    const total = calculateTotal();
     setBookingLoading(true);
 
     try {
-      // Step 1: Create Razorpay Order
+      // Create order
       const orderResponse = await paymentService.createOrder({
-        userId: user?.id || user?.id || '',
+        userId: user?.id || user?._id || '',
         eventId: id || '',
         poojaIds: selectedPoojas,
-        amount: total,
+        amount: calculateTotal(),
       });
 
-      const { orderId, key } = orderResponse.data;
+      console.log('📤 Order response:', orderResponse.data);
 
-      // Step 2: Initialize Razorpay Checkout
+      if (!orderResponse.data.order_id) {
+        throw new Error('No order ID received from backend');
+      }
+
+      const orderId = orderResponse.data.order_id;
+      const razorpayKey = orderResponse.data.key; // ✅ USE KEY FROM BACKEND!
+      
+      console.log('✅ Order created:', orderId);
+      console.log('🔑 Razorpay key from backend:', razorpayKey);
+
+      // Open Razorpay with key from backend
       await paymentService.initializeRazorpay({
-        key,
+        key: razorpayKey,  // ✅ USE THE KEY FROM ORDER RESPONSE!
         order_id: orderId,
         customer_notification: 1,
         prefill: {
-          name: user?.name || '',
+          name: user?.name || 'Guest',
           email: user?.email || '',
           contact: user?.phoneNumber || '',
         },
         handler: async (response: any) => {
           try {
-            // Step 3: Verify Payment
+            console.log('✅ Payment successful:', response);
+
             const verifyResponse = await paymentService.verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -92,198 +102,201 @@ export default function EventDetails() {
             });
 
             if (verifyResponse.data.success) {
-              // Step 4: Create Booking
-              const bookingData = {
-                userId: user?.id || user?.id,
-                eventId: id,
-                poojaIds: selectedPoojas,
+              await paymentService.createBooking({
+                userId: user?.id || user?._id || '',
+                eventId: id || '',
+                poojas: selectedPoojas,
+                amount: calculateTotal(),
                 paymentId: response.razorpay_payment_id,
-                amount: total,
-                poojaDetails: event.poojas.filter((p: any) =>
-                  selectedPoojas.includes(p.name)
-                ),
-              };
+                orderId: orderId,
+              });
 
-              await paymentService.createBooking(bookingData);
-
-              toast.success('✅ Payment successful! Booking confirmed!');
-              setSelectedPoojas([]);
-              
-              // Redirect to bookings after 2 seconds
+              toast.success('✅ Booking confirmed!');
               setTimeout(() => {
-                navigate('/dashboard');
+                navigate('/events');
               }, 2000);
-            } else {
-              toast.error('❌ Payment verification failed');
             }
-          } catch (error: any) {
-            toast.error(error.message || 'Payment verification failed');
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            toast.error('Payment verification failed');
           } finally {
             setBookingLoading(false);
           }
         },
       });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to initiate payment');
+      console.error('Payment error:', error);
+      toast.error(error.message || 'Payment failed');
       setBookingLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <p className="text-center text-gray-600">Loading event details...</p>
+      <div style={{ padding: '2rem', textAlign: 'center', minHeight: '60vh' }}>
+        ⏳ Loading event details...
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <p className="text-center text-gray-600">Event not found</p>
+      <div style={{ padding: '2rem', textAlign: 'center', minHeight: '60vh' }}>
+        Event not found
       </div>
     );
   }
 
-  const total = calculateTotal();
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <button
-        onClick={() => navigate('/events')}
-        className="mb-6 px-4 py-2 text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-2"
-      >
-        ← Back to Events
-      </button>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, rgb(147, 51, 234), rgb(249, 115, 22))', paddingBottom: '2rem' }}>
+      <div style={{ padding: '1rem 2rem' }}>
+        <button
+          onClick={() => navigate('/events')}
+          style={{
+            background: 'rgba(255, 255, 255, 0.2)',
+            color: 'white',
+            border: 'none',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+          }}
+        >
+          ← Back to Events
+        </button>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Event Info */}
-        <div className="lg:col-span-2">
-          {/* Title & Meta */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
-            <p className="text-gray-600 text-lg mb-4">{event.description}</p>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem' }}>
+        <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', marginBottom: '2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+          <h1 style={{ fontSize: '2.5rem', margin: '0 0 0.5rem 0', color: 'rgb(31, 41, 55)' }}>
+            🏛️ {event.title}
+          </h1>
+          <p style={{ margin: '0 0 1.5rem 0', color: 'rgb(107, 114, 128)', fontSize: '1.125rem' }}>
+            {event.description}
+          </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-orange-50 p-4 rounded">
-                <p className="text-sm text-gray-600">📅 Date</p>
-                <p className="font-semibold">{new Date(event.startDate).toLocaleDateString()}</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded">
-                <p className="text-sm text-gray-600">⏰ Time</p>
-                <p className="font-semibold">{new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded">
-                <p className="text-sm text-gray-600">📍 Venue</p>
-                <p className="font-semibold">{event.venue}</p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded">
-                <p className="text-sm text-gray-600">👥 Attendees</p>
-                <p className="font-semibold">{event.attendees || 0}</p>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+            <div>
+              <p style={{ margin: '0 0 0.5rem 0', color: 'rgb(107, 114, 128)', fontSize: '0.875rem' }}>📍 Venue</p>
+              <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>{event.venue}</p>
             </div>
-
-            <div className="flex gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                event.status === 'future' ? 'bg-green-100 text-green-800' :
-                event.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {event.status.toUpperCase()}
-              </span>
-              {event.isActive && (
-                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
-                  Active Bookings
-                </span>
-              )}
+            <div>
+              <p style={{ margin: '0 0 0.5rem 0', color: 'rgb(107, 114, 128)', fontSize: '0.875rem' }}>📅 Date</p>
+              <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
+                {new Date(event.startDate).toLocaleDateString()}
+              </p>
             </div>
-          </div>
-
-          {/* Poojas Section */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">🕉️ Poojas Available</h2>
-            <div className="space-y-4">
-              {event.poojas.map((pooja: any, idx: number) => (
-                <div key={idx} className="border rounded-lg p-4 hover:bg-gray-50 transition">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold">{pooja.name}</h3>
-                      <p className="text-gray-600 text-sm mt-1">{pooja.significance}</p>
-                      <div className="flex gap-4 mt-3 text-sm text-gray-600">
-                        <span>⏱️ {pooja.durationMinutes} mins</span>
-                        <span>💰 ₹{pooja.price}</span>
-                      </div>
-                    </div>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedPoojas.includes(pooja.name)}
-                        onChange={() => handlePoojaToggle(pooja.name)}
-                        className="w-5 h-5 accent-orange-600"
-                      />
-                    </label>
-                  </div>
-                </div>
-              ))}
+            <div>
+              <p style={{ margin: '0 0 0.5rem 0', color: 'rgb(107, 114, 128)', fontSize: '0.875rem' }}>🕐 Time</p>
+              <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
+                {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+            <div>
+              <p style={{ margin: '0 0 0.5rem 0', color: 'rgb(107, 114, 128)', fontSize: '0.875rem' }}>👥 Attendees</p>
+              <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>0</p>
             </div>
           </div>
         </div>
 
-        {/* Booking Card - Sticky */}
-        <div className="lg:col-span-1">
-          <div className="bg-white shadow rounded-lg p-6 sticky top-20">
-            <h3 className="text-xl font-bold mb-4">Booking Summary</h3>
+        <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', marginBottom: '2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>🕉️</span>
+            <h2 style={{ margin: 0, fontSize: '1.75rem', color: 'rgb(31, 41, 55)' }}>Poojas Available</h2>
+          </div>
 
-            {/* Selected Poojas */}
-            <div className="bg-gray-50 rounded p-4 mb-4 max-h-48 overflow-y-auto">
-              {selectedPoojas.length === 0 ? (
-                <p className="text-gray-500 text-sm">No poojas selected</p>
-              ) : (
-                <div className="space-y-2">
-                  {selectedPoojas.map(poojaName => {
-                    const pooja = event.poojas.find((p: any) => p.name === poojaName);
-                    return (
-                      <div key={poojaName} className="flex justify-between text-sm">
-                        <span className="font-medium">{poojaName}</span>
-                        <span>₹{pooja.price}</span>
-                      </div>
-                    );
-                  })}
+          {event.poojas && event.poojas.length > 0 ? (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {event.poojas.map((pooja: any, idx: number) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: '1.5rem',
+                    background: selectedPoojas.includes(pooja.name) ? 'rgb(240, 253, 244)' : 'rgb(249, 250, 251)',
+                    border: selectedPoojas.includes(pooja.name) ? '2px solid rgb(34, 197, 94)' : '2px solid rgb(229, 231, 235)',
+                    borderRadius: '0.75rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                  }}
+                  onClick={() => handlePoojaToggle(pooja.name)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <input
+                        type="checkbox"
+                        checked={selectedPoojas.includes(pooja.name)}
+                        onChange={() => {}}
+                        style={{ marginRight: '1rem', cursor: 'pointer', width: '20px', height: '20px' }}
+                      />
+                      <span style={{ fontSize: '1.125rem', fontWeight: '600', color: 'rgb(31, 41, 55)' }}>
+                        {pooja.name}
+                      </span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ margin: '0 0 0.25rem 0', color: 'rgb(107, 114, 128)', fontSize: '0.875rem' }}>
+                        ⏱️ {pooja.durationMinutes} mins
+                      </p>
+                      <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold', color: 'rgb(249, 115, 22)' }}>
+                        ₹{pooja.price}
+                      </p>
+                    </div>
+                  </div>
+                  {pooja.significance && (
+                    <p style={{ margin: '0.75rem 0 0 2rem', color: 'rgb(107, 114, 128)', fontSize: '0.875rem' }}>
+                      {pooja.significance}
+                    </p>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
+          ) : (
+            <p style={{ color: 'rgb(107, 114, 128)' }}>No poojas available</p>
+          )}
+        </div>
 
-            {/* Total */}
-            <div className="border-t-2 pt-4 mb-4">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-lg">Total:</span>
-                <span className="text-2xl font-bold text-orange-600">₹{total}</span>
+        <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+          <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', color: 'rgb(31, 41, 55)' }}>📋 Booking Summary</h3>
+
+          {selectedPoojas.length === 0 ? (
+            <p style={{ color: 'rgb(107, 114, 128)' }}>No poojas selected</p>
+          ) : (
+            <div>
+              <div style={{ marginBottom: '1rem' }}>
+                {selectedPoojas.map((poojaName, idx) => {
+                  const pooja = event.poojas.find((p: any) => p.name === poojaName);
+                  return (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span>{poojaName}</span>
+                      <span style={{ fontWeight: '600' }}>₹{pooja.price}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ borderTop: '2px solid rgb(229, 231, 235)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold' }}>
+                <span>Total:</span>
+                <span style={{ color: 'rgb(249, 115, 22)' }}>₹{calculateTotal()}</span>
               </div>
             </div>
+          )}
 
-            {/* Payment Button */}
-            <button
-              onClick={handlePayment}
-              disabled={bookingLoading || selectedPoojas.length === 0}
-              className="w-full px-4 py-3 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition"
-            >
-              {bookingLoading ? 'Processing...' : 'Proceed to Payment'}
-            </button>
-
-            {/* Login Prompt */}
-            {!isAuthenticated && (
-              <p className="text-xs text-gray-600 text-center mt-3">
-                <button
-                  onClick={() => navigate('/login')}
-                  className="text-orange-600 hover:underline"
-                >
-                  Login
-                </button>
-                {' '}to book this event
-              </p>
-            )}
-          </div>
+          <button
+            onClick={handlePayment}
+            disabled={selectedPoojas.length === 0 || bookingLoading}
+            style={{
+              width: '100%',
+              padding: '1rem',
+              marginTop: '1.5rem',
+              background: selectedPoojas.length === 0 || bookingLoading ? 'rgb(200, 200, 200)' : 'linear-gradient(to right, rgb(249, 115, 22), rgb(147, 51, 234))',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.75rem',
+              fontSize: '1.125rem',
+              fontWeight: '600',
+              cursor: selectedPoojas.length === 0 || bookingLoading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {bookingLoading ? '⏳ Processing...' : '💳 Proceed to Payment'}
+          </button>
         </div>
       </div>
     </div>

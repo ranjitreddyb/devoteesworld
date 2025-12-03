@@ -5,7 +5,7 @@ export declare class PaymentsService {
     private razorpay;
     constructor(paymentModel: Model<any>, bookingModel: Model<any>);
     createOrder(userId: string, eventId: string, poojaIds: string[], amount: number): Promise<{
-        orderId: string;
+        order_id: string;
         amount: number;
         currency: string;
         key: string;

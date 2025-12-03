@@ -8,7 +8,7 @@ export declare class PaymentsController {
         poojaIds: string[];
         amount: number;
     }): Promise<{
-        orderId: string;
+        order_id: string;
         amount: number;
         currency: string;
         key: string;

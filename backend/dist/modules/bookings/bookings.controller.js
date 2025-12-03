@@ -20,6 +20,10 @@ let BookingsController = class BookingsController {
     constructor(bookingsService) {
         this.bookingsService = bookingsService;
     }
+    async getAllBookings() {
+        console.log('📋 Fetching all bookings');
+        return this.bookingsService.getAllBookings();
+    }
     async createBooking(bookingData) {
         return this.bookingsService.createBooking(bookingData);
     }
@@ -34,6 +38,13 @@ let BookingsController = class BookingsController {
     }
 };
 exports.BookingsController = BookingsController;
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all bookings' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BookingsController.prototype, "getAllBookings", null);
 __decorate([
     (0, common_1.Post)('create'),
     (0, swagger_1.ApiOperation)({ summary: 'Create booking' }),

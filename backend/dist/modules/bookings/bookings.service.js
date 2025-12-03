@@ -20,87 +20,21 @@ let BookingsService = class BookingsService {
     constructor(bookingModel) {
         this.bookingModel = bookingModel;
     }
+    async getAllBookings() {
+        console.log('📋 Fetching all bookings from DB');
+        return this.bookingModel.find().populate('userId').populate('eventId');
+    }
     async createBooking(bookingData) {
-        try {
-            console.log('📝 Creating booking with data:', bookingData);
-            // Validate ObjectIds
-            if (!bookingData.userId) {
-                throw new common_1.BadRequestException('userId is required');
-            }
-            if (!bookingData.eventId) {
-                throw new common_1.BadRequestException('eventId is required');
-            }
-            if (!mongoose_2.Types.ObjectId.isValid(bookingData.userId)) {
-                console.log('❌ Invalid userId format:', bookingData.userId);
-                throw new common_1.BadRequestException(`Invalid userId format: ${bookingData.userId}`);
-            }
-            if (!mongoose_2.Types.ObjectId.isValid(bookingData.eventId)) {
-                console.log('❌ Invalid eventId format:', bookingData.eventId);
-                throw new common_1.BadRequestException(`Invalid eventId format: ${bookingData.eventId}`);
-            }
-            const booking = await this.bookingModel.create({
-                userId: new mongoose_2.Types.ObjectId(bookingData.userId),
-                eventId: new mongoose_2.Types.ObjectId(bookingData.eventId),
-                poojaIds: bookingData.poojaIds,
-                paymentId: bookingData.paymentId,
-                amount: bookingData.amount,
-                status: 'confirmed',
-                bookingDate: new Date(),
-                poojaDetails: bookingData.poojaDetails,
-            });
-            console.log('✅ Booking created successfully:', booking._id);
-            return booking;
-        }
-        catch (error) {
-            console.error('❌ Booking creation error:', error);
-            throw new Error(`Failed to create booking: ${error.message}`);
-        }
+        return this.bookingModel.create(bookingData);
     }
     async getUserBookings(userId) {
-        try {
-            if (!mongoose_2.Types.ObjectId.isValid(userId)) {
-                throw new common_1.BadRequestException(`Invalid userId format: ${userId}`);
-            }
-            const bookings = await this.bookingModel
-                .find({ userId: new mongoose_2.Types.ObjectId(userId) })
-                .populate('eventId')
-                .populate('paymentId')
-                .sort({ bookingDate: -1 });
-            return bookings;
-        }
-        catch (error) {
-            throw new Error(`Failed to fetch user bookings: ${error.message}`);
-        }
+        return this.bookingModel.find({ userId }).populate('eventId');
     }
     async getBookingDetails(bookingId) {
-        try {
-            if (!mongoose_2.Types.ObjectId.isValid(bookingId)) {
-                throw new common_1.BadRequestException(`Invalid bookingId format: ${bookingId}`);
-            }
-            const booking = await this.bookingModel
-                .findById(new mongoose_2.Types.ObjectId(bookingId))
-                .populate('eventId')
-                .populate('paymentId');
-            return booking;
-        }
-        catch (error) {
-            throw new Error(`Failed to fetch booking details: ${error.message}`);
-        }
+        return this.bookingModel.findById(bookingId).populate('userId').populate('eventId');
     }
     async getEventBookings(eventId) {
-        try {
-            if (!mongoose_2.Types.ObjectId.isValid(eventId)) {
-                throw new common_1.BadRequestException(`Invalid eventId format: ${eventId}`);
-            }
-            const bookings = await this.bookingModel
-                .find({ eventId: new mongoose_2.Types.ObjectId(eventId) })
-                .populate('userId')
-                .sort({ bookingDate: -1 });
-            return bookings;
-        }
-        catch (error) {
-            throw new Error(`Failed to fetch event bookings: ${error.message}`);
-        }
+        return this.bookingModel.find({ eventId }).populate('userId');
     }
 };
 exports.BookingsService = BookingsService;
