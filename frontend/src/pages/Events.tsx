@@ -23,7 +23,7 @@ interface Event {
 
 export default function Events() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { } = useAuthStore();
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ export default function Events() {
   const fetchEvents = async () => {
     try {
       console.log('📥 Fetching events from /api/v1/events');
-      const response = await fetch('http://localhost:3000/api/v1/events');
+      const response = await fetch('/api/v1/events');
       if (!response.ok) throw new Error('Failed to fetch events');
       const data = await response.json();
       console.log('✅ Events fetched:', data);

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { storage } from '../services/storage-service';
 import apiService from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -161,18 +160,14 @@ export default function AdminDashboard() {
 
   const totalRevenue = bookings.reduce((sum, booking) => sum + (booking.amount || 0), 0);
   const totalBookings = bookings.length;
-  const futureEvents = events.filter(e => e.status === 'future').length;
 
   // Analytics data
   const poojaAnalytics = {} as any;
-  const eventAnalytics = {} as any;
-  const regionAnalytics = {} as any;
 
   bookings.forEach((booking: any) => {
     booking.poojas?.forEach((pooja: string) => {
       poojaAnalytics[pooja] = (poojaAnalytics[pooja] || 0) + 1;
     });
-    eventAnalytics[booking.eventId] = (eventAnalytics[booking.eventId] || 0) + 1;
   });
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>⏳ Loading...</div>;

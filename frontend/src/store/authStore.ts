@@ -18,6 +18,7 @@ interface AuthStore {
   register: (data: any) => Promise<void>;
   logout: () => void;
   setUser: (user: User) => void;
+  setToken: (token: string) => void;
   initializeAuth: () => void;
 }
 
@@ -48,13 +49,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   login: async (emailOrUser: string | any, passwordOrToken?: string) => {
     try {
-      // Handle both direct API call and store method call
       let access_token: string;
       let user: User;
   
-      // If called from authStore directly (email, password)
       if (typeof emailOrUser === 'string' && passwordOrToken) {
-        const response = await axios.post('http://localhost:3000/api/v1/auth/login', {
+        const response = await axios.post('/api/v1/auth/login', {
           email: emailOrUser,
           password: passwordOrToken,
         });
@@ -63,9 +62,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   
         access_token = response.data.access_token;
         user = response.data.user;
-      }
-      // If called from Login.tsx with user object and token
-      else if (typeof emailOrUser === 'object' && typeof passwordOrToken === 'string') {
+      } else if (typeof emailOrUser === 'object' && typeof passwordOrToken === 'string') {
         access_token = passwordOrToken;
         user = emailOrUser;
       } else {
@@ -94,7 +91,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   register: async (data: any) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/auth/register', data);
+      const response = await axios.post('/api/v1/auth/register', data);
       
       console.log('✅ Register response:', response.data);
       
@@ -126,5 +123,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   setUser: (user: User) => {
     set({ user });
+  },
+
+  setToken: (token: string) => {
+    set({ token });
   },
 }));
