@@ -76,14 +76,14 @@ export default function EventDetails() {
       }
 
       const orderId = orderResponse.data.order_id;
-      const razorpayKey = orderResponse.data.key; // ✅ USE KEY FROM BACKEND!
+      const razorpayKey = orderResponse.data.key;
       
       console.log('✅ Order created:', orderId);
       console.log('🔑 Razorpay key from backend:', razorpayKey);
 
       // Open Razorpay with key from backend
       await paymentService.initializeRazorpay({
-        key: razorpayKey,  // ✅ USE THE KEY FROM ORDER RESPONSE!
+        key: razorpayKey,
         order_id: orderId,
         customer_notification: 1,
         prefill: {
@@ -102,15 +102,9 @@ export default function EventDetails() {
             });
 
             if (verifyResponse.data.success) {
-              await paymentService.createBooking({
-                userId: user?.id || user?._id || '',
-                eventId: id || '',
-                poojas: selectedPoojas,
-                amount: calculateTotal(),
-                paymentId: response.razorpay_payment_id,
-                orderId: orderId,
-              });
-
+              // ✅ Booking is already created by payment verification endpoint
+              // No need to call createBooking again!
+              
               toast.success('✅ Booking confirmed!');
               setTimeout(() => {
                 navigate('/events');
