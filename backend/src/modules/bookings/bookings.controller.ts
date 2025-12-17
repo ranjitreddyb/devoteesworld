@@ -17,7 +17,8 @@ export class BookingsController {
   @Post('create')
   @ApiOperation({ summary: 'Create booking' })
   async createBooking(@Body() bookingData: any) {
-    return this.bookingsService.createBooking(bookingData);
+    // ⚠️ DEPRECATED: Bookings are now created automatically during payment verification
+    throw new Error('❌ Direct booking creation is disabled. Bookings are created automatically when payment is verified via /payments/verify endpoint.');
   }
 
   @Get('user/:userId')

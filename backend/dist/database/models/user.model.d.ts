@@ -7,6 +7,7 @@ export declare class User {
     dateOfBirth?: Date;
     address?: string;
     phoneNumber?: string;
+    whatsappNumber?: string;
     maritalStatus?: string;
     dateOfMarriage?: Date;
     healthStatus?: {
@@ -26,6 +27,7 @@ export declare class User {
         region?: string;
     };
     preferredLanguage?: string;
+    language?: string;
 }
 export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User> & User & {
     _id: import("mongoose").Types.ObjectId;

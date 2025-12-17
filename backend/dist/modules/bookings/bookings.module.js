@@ -9,22 +9,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const config_1 = require("@nestjs/config");
 const bookings_service_1 = require("./bookings.service");
 const bookings_controller_1 = require("./bookings.controller");
-const booking_schema_1 = require("./schemas/booking.schema");
+const email_module_1 = require("../email/email.module");
 let BookingsModule = class BookingsModule {
 };
 exports.BookingsModule = BookingsModule;
 exports.BookingsModule = BookingsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([
-                { name: 'Booking', schema: booking_schema_1.BookingSchema },
-            ]),
+            mongoose_1.MongooseModule.forFeature([{ name: 'Booking', schema: require('../../database/models/booking.model').BookingSchema }]),
+            config_1.ConfigModule,
+            email_module_1.EmailModule,
         ],
-        controllers: [bookings_controller_1.BookingsController],
         providers: [bookings_service_1.BookingsService],
-        exports: [bookings_service_1.BookingsService],
+        controllers: [bookings_controller_1.BookingsController],
     })
 ], BookingsModule);
 //# sourceMappingURL=bookings.module.js.map

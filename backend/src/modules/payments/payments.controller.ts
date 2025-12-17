@@ -31,7 +31,25 @@ export class PaymentsController {
   async verifyPayment(@Body() paymentData: any) {
     const result = await this.paymentsService.verifyPayment(paymentData);
     if (result.success) {
-      const booking = await this.paymentsService.createBooking(paymentData);
+      // Fetch payment record to get complete booking data
+      const payment = await this.paymentsService.getPaymentByOrderId(
+        paymentData.razorpay_order_id,
+      );
+
+      if (!payment) {
+        return { success: false, message: 'Payment record not found' };
+      }
+
+      // Pass complete data to createBooking
+      const booking = await this.paymentsService.createBooking({
+        razorpay_order_id: paymentData.razorpay_order_id,
+        razorpay_payment_id: paymentData.razorpay_payment_id,
+        userId: (payment as any).userId,
+        eventId: (payment as any).eventId,
+        poojaIds: (payment as any).poojaIds,
+        totalAmount: (payment as any).amount,
+      });
+
       return { success: true, booking };
     }
     return result;

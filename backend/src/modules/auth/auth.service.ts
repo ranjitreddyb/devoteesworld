@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
+import { EmailService } from '../email/email.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
@@ -9,30 +10,29 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   async register(createUserDto: CreateUserDto) {
     try {
-      // Check if user exists
       const existingUser = await this.usersService.findByEmail(createUserDto.email);
       if (existingUser) {
         throw new BadRequestException('User already exists');
       }
 
-      // Hash password HERE
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      // Create user with ALREADY HASHED password - skip double hashing
       const user = await this.usersService.create(
         {
           ...createUserDto,
           password: hashedPassword,
           role: 'user',
+          whatsappNumber: createUserDto.whatsappNumber,
+          language: createUserDto.language || 'en',
         },
-        true  // ← skipPasswordHash = true
+        true
       );
 
-      // Generate token
       const payload = {
         email: user.email,
         sub: user._id,
@@ -41,6 +41,10 @@ export class AuthService {
 
       console.log('✅ User registered:', user.email);
 
+      this.emailService.sendWelcomeEmail(user.email, user.name).catch(err => {
+        console.warn('⚠️ Failed to send welcome email:', err.message);
+      });
+
       return {
         access_token: this.jwtService.sign(payload),
         user: {
@@ -48,6 +52,8 @@ export class AuthService {
           email: user.email,
           name: user.name,
           phoneNumber: user.phoneNumber,
+          whatsappNumber: user.whatsappNumber,
+          language: user.language,
           role: user.role,
         },
       };
@@ -74,6 +80,8 @@ export class AuthService {
           email: user.email,
           name: user.name,
           phoneNumber: user.phoneNumber,
+          whatsappNumber: user.whatsappNumber,
+          language: user.language,
           role: user.role,
         },
       };
@@ -119,6 +127,8 @@ export class AuthService {
           email: user.email,
           name: user.name,
           phoneNumber: user.phoneNumber,
+          whatsappNumber: user.whatsappNumber,
+          language: user.language,
           role: user.role,
         },
       };

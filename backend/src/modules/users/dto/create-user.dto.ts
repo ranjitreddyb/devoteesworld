@@ -1,50 +1,28 @@
-import { IsEmail, IsString, IsDate, IsOptional, IsArray, IsPhoneNumber, IsEnum, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-
-class HealthStatusDto {
-  diabetic: boolean;
-  bp: boolean;
-  heartAilment: boolean;
-  recentSurgery: boolean;
-}
+import { IsEmail, IsString, MinLength, Matches, IsOptional, IsIn } from 'class-validator';
 
 export class CreateUserDto {
+  @IsString()
+  name: string;
+
   @IsEmail()
   email: string;
 
   @IsString()
+  @MinLength(6)
   password: string;
 
   @IsString()
-  name: string;
-
-  @IsDate()
-  @Type(() => Date)
-  dateOfBirth: Date;
-
-  @IsString()
-  address: string;
-
-  @IsPhoneNumber('IN')
+  @Matches(/^[0-9]{10}$/, { message: 'Phone number must be 10 digits' })
   phoneNumber: string;
 
-  @IsEnum(['single', 'married', 'divorced', 'widowed'])
-  maritalStatus: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  dateOfMarriage?: Date;
-
-  @ValidateNested()
-  @Type(() => HealthStatusDto)
-  healthStatus: HealthStatusDto;
-
-  @IsOptional()
   @IsString()
-  aadharCardUrl?: string;
+  @Matches(/^\+91[0-9]{10}$/, { message: 'WhatsApp number must be +91XXXXXXXXXX' })
+  whatsappNumber: string;
 
   @IsOptional()
-  @IsString()
-  photoUrl?: string;
+  @IsIn(['en', 'hi', 'ta', 'te', 'ka', 'ml', 'gu', 'mr'])
+  language?: string;
+
+  @IsOptional()
+  role?: string;
 }

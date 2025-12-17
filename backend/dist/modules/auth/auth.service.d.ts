@@ -1,10 +1,12 @@
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { EmailService } from '../email/email.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 export declare class AuthService {
     private usersService;
     private jwtService;
-    constructor(usersService: UsersService, jwtService: JwtService);
+    private emailService;
+    constructor(usersService: UsersService, jwtService: JwtService, emailService: EmailService);
     register(createUserDto: CreateUserDto): Promise<{
         access_token: string;
         user: {
@@ -12,6 +14,8 @@ export declare class AuthService {
             email: string;
             name: string;
             phoneNumber: string;
+            whatsappNumber: string;
+            language: string;
             role: string;
         };
     }>;
@@ -22,6 +26,8 @@ export declare class AuthService {
             email: any;
             name: any;
             phoneNumber: any;
+            whatsappNumber: any;
+            language: any;
             role: any;
         };
     }>;
@@ -32,6 +38,8 @@ export declare class AuthService {
             email: string;
             name: string;
             phoneNumber: string;
+            whatsappNumber: string;
+            language: string;
             role: string;
         };
     }>;
@@ -45,6 +53,8 @@ export declare class AuthService {
             email: string;
             name: string;
             phoneNumber: string;
+            whatsappNumber: string;
+            language: string;
             role: string;
         };
     }>;

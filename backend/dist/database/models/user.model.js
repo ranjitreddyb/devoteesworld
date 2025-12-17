@@ -15,7 +15,7 @@ let User = class User {
 };
 exports.User = User;
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, unique: true }),
+    (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
@@ -38,6 +38,10 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], User.prototype, "phoneNumber", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, unique: true, sparse: true }),
+    __metadata("design:type", String)
+], User.prototype, "whatsappNumber", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ enum: ['single', 'married', 'divorced', 'widowed'] }),
     __metadata("design:type", String)
@@ -78,8 +82,14 @@ __decorate([
     (0, mongoose_1.Prop)({ default: 'en' }),
     __metadata("design:type", String)
 ], User.prototype, "preferredLanguage", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ enum: ['en', 'hi', 'ta', 'te', 'ka', 'ml', 'gu', 'mr'], default: 'en' }),
+    __metadata("design:type", String)
+], User.prototype, "language", void 0);
 exports.User = User = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], User);
 exports.UserSchema = mongoose_1.SchemaFactory.createForClass(User);
+// Create unique index on email (will be applied when collection is created)
+exports.UserSchema.index({ email: 1 }, { unique: true, sparse: true });
 //# sourceMappingURL=user.model.js.map

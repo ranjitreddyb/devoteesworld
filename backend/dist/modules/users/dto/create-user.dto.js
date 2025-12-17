@@ -11,60 +11,39 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateUserDto = void 0;
 const class_validator_1 = require("class-validator");
-const class_transformer_1 = require("class-transformer");
-class HealthStatusDto {
-}
 class CreateUserDto {
 }
 exports.CreateUserDto = CreateUserDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(6),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "password", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateUserDto.prototype, "name", void 0);
-__decorate([
-    (0, class_validator_1.IsDate)(),
-    (0, class_transformer_1.Type)(() => Date),
-    __metadata("design:type", Date)
-], CreateUserDto.prototype, "dateOfBirth", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateUserDto.prototype, "address", void 0);
-__decorate([
-    (0, class_validator_1.IsPhoneNumber)('IN'),
+    (0, class_validator_1.Matches)(/^[0-9]{10}$/, { message: 'Phone number must be 10 digits' }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "phoneNumber", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(['single', 'married', 'divorced', 'widowed']),
-    __metadata("design:type", String)
-], CreateUserDto.prototype, "maritalStatus", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDate)(),
-    (0, class_transformer_1.Type)(() => Date),
-    __metadata("design:type", Date)
-], CreateUserDto.prototype, "dateOfMarriage", void 0);
-__decorate([
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => HealthStatusDto),
-    __metadata("design:type", HealthStatusDto)
-], CreateUserDto.prototype, "healthStatus", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\+91[0-9]{10}$/, { message: 'WhatsApp number must be +91XXXXXXXXXX' }),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "aadharCardUrl", void 0);
+], CreateUserDto.prototype, "whatsappNumber", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(['en', 'hi', 'ta', 'te', 'ka', 'ml', 'gu', 'mr']),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "photoUrl", void 0);
+], CreateUserDto.prototype, "language", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "role", void 0);
 //# sourceMappingURL=create-user.dto.js.map

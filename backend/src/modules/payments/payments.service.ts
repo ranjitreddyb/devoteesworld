@@ -63,7 +63,7 @@ export class PaymentsService {
 
       // ✅ Return with order_id (snake_case) so frontend can read it
       return {
-        order_id: razorpayOrder.id,  // Changed from orderId to order_id
+        order_id: razorpayOrder.id,
         amount,
         currency: 'INR',
         key: process.env.RAZORPAY_KEY_ID,
@@ -114,25 +114,36 @@ export class PaymentsService {
     }
   }
 
+  // Get payment record by order ID
+  async getPaymentByOrderId(orderId: string) {
+    try {
+      const payment = await this.paymentModel.findOne({
+        razorpayOrderId: orderId,
+      }).lean();
+      return payment;
+    } catch (error: any) {
+      console.error('❌ Error fetching payment by order ID:', error);
+      return null;
+    }
+  }
+
   // Create booking after successful payment
   async createBooking(paymentData: any) {
     try {
       console.log('📋 Creating booking from payment:', paymentData);
 
-      const payment = await this.paymentModel.findOne({
-        razorpayOrderId: paymentData.razorpay_order_id,
-      });
-
-      if (!payment || payment.status !== 'completed') {
-        throw new Error('Payment not verified');
+      // Ensure we have all required fields
+      if (!paymentData.userId || !paymentData.eventId || !paymentData.totalAmount) {
+        throw new Error('Missing required payment data: userId, eventId, or totalAmount');
       }
 
       const booking = await this.bookingModel.create({
-        userId: payment.userId,
-        eventId: payment.eventId,
-        poojaIds: payment.poojaIds,
-        paymentId: payment._id,
-        amount: payment.amount,
+        userId: paymentData.userId,
+        eventId: paymentData.eventId,
+        poojaIds: paymentData.poojaIds || [],
+        razorpayOrderId: paymentData.razorpay_order_id,
+        razorpayPaymentId: paymentData.razorpay_payment_id,
+        totalAmount: paymentData.totalAmount,
         status: 'confirmed',
         bookingDate: new Date(),
       });

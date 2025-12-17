@@ -16,6 +16,9 @@ import { PredictionModule } from './modules/prediction-ai/prediction.module';
 import { AttendanceModule } from './modules/attendance-ai/attendance.module';
 import { ConfigEngineModule } from './modules/config-engine/config-engine.module';
 import { GrievanceModule } from './modules/grievance/grievance.module';
+import { EmailModule } from './modules/email/email.module';
+import { BullModule } from '@nestjs/bull';
+import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -31,6 +34,13 @@ import { GrievanceModule } from './modules/grievance/grievance.module';
         dbName: configService.get('DB_NAME'),
       }),
     }),
+    BullModule.forRoot({
+      redis: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT) || 6379,
+    },
+   }),
+    WhatsappModule,
     AuthModule,
     UsersModule,
     EventsModule,
@@ -46,6 +56,7 @@ import { GrievanceModule } from './modules/grievance/grievance.module';
     AttendanceModule,
     ConfigEngineModule,
     GrievanceModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

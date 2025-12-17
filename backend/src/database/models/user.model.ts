@@ -5,7 +5,7 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   email?: string;
 
   @Prop({ required: true })
@@ -22,6 +22,8 @@ export class User {
 
   @Prop()
   phoneNumber?: string;
+  @Prop({ required: true, unique: true, sparse: true })
+  whatsappNumber?: string;
 
   @Prop({ enum: ['single', 'married', 'divorced', 'widowed'] })
   maritalStatus?: string;
@@ -61,6 +63,11 @@ export class User {
 
   @Prop({ default: 'en' })
   preferredLanguage?: string;
+  @Prop({ enum: ['en', 'hi', 'ta', 'te', 'ka', 'ml', 'gu', 'mr'], default: 'en' })
+  language?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Create unique index on email (will be applied when collection is created)
+UserSchema.index({ email: 1 }, { unique: true, sparse: true });

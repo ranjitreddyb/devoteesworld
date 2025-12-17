@@ -25,6 +25,9 @@ const prediction_module_1 = require("./modules/prediction-ai/prediction.module")
 const attendance_module_1 = require("./modules/attendance-ai/attendance.module");
 const config_engine_module_1 = require("./modules/config-engine/config-engine.module");
 const grievance_module_1 = require("./modules/grievance/grievance.module");
+const email_module_1 = require("./modules/email/email.module");
+const bull_1 = require("@nestjs/bull");
+const whatsapp_module_1 = require("./modules/whatsapp/whatsapp.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -43,6 +46,13 @@ exports.AppModule = AppModule = __decorate([
                     dbName: configService.get('DB_NAME'),
                 }),
             }),
+            bull_1.BullModule.forRoot({
+                redis: {
+                    host: process.env.REDIS_HOST || 'localhost',
+                    port: parseInt(process.env.REDIS_PORT) || 6379,
+                },
+            }),
+            whatsapp_module_1.WhatsappModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             events_module_1.EventsModule,
@@ -58,6 +68,7 @@ exports.AppModule = AppModule = __decorate([
             attendance_module_1.AttendanceModule,
             config_engine_module_1.ConfigEngineModule,
             grievance_module_1.GrievanceModule,
+            email_module_1.EmailModule,
         ],
     })
 ], AppModule);

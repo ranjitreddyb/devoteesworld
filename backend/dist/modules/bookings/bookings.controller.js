@@ -25,7 +25,8 @@ let BookingsController = class BookingsController {
         return this.bookingsService.getAllBookings();
     }
     async createBooking(bookingData) {
-        return this.bookingsService.createBooking(bookingData);
+        // ⚠️ DEPRECATED: Bookings are now created automatically during payment verification
+        throw new Error('❌ Direct booking creation is disabled. Bookings are created automatically when payment is verified via /payments/verify endpoint.');
     }
     async getUserBookings(userId) {
         return this.bookingsService.getUserBookings(userId);

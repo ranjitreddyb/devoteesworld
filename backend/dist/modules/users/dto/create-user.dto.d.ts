@@ -1,21 +1,10 @@
-declare class HealthStatusDto {
-    diabetic: boolean;
-    bp: boolean;
-    heartAilment: boolean;
-    recentSurgery: boolean;
-}
 export declare class CreateUserDto {
+    name: string;
     email: string;
     password: string;
-    name: string;
-    dateOfBirth: Date;
-    address: string;
     phoneNumber: string;
-    maritalStatus: string;
-    dateOfMarriage?: Date;
-    healthStatus: HealthStatusDto;
-    aadharCardUrl?: string;
-    photoUrl?: string;
+    whatsappNumber: string;
+    language?: string;
+    role?: string;
 }
-export {};
 //# sourceMappingURL=create-user.dto.d.ts.map

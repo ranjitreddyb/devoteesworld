@@ -14,6 +14,11 @@ export declare class PaymentsService {
         success: boolean;
         message: string;
     }>;
+    getPaymentByOrderId(orderId: string): Promise<(import("mongoose").FlattenMaps<any> & Required<{
+        _id: unknown;
+    }>)[] | (import("mongoose").FlattenMaps<any> & Required<{
+        _id: unknown;
+    }>)>;
     createBooking(paymentData: any): Promise<any>;
     getPaymentDetails(orderId: string): Promise<any>;
 }

@@ -9,10 +9,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentsModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const config_1 = require("@nestjs/config");
 const payments_service_1 = require("./payments.service");
 const payments_controller_1 = require("./payments.controller");
+const email_module_1 = require("../email/email.module");
 const payment_schema_1 = require("./schemas/payment.schema");
-const booking_schema_1 = require("../bookings/schemas/booking.schema");
+const booking_model_1 = require("../../database/models/booking.model");
 let PaymentsModule = class PaymentsModule {
 };
 exports.PaymentsModule = PaymentsModule;
@@ -21,8 +23,10 @@ exports.PaymentsModule = PaymentsModule = __decorate([
         imports: [
             mongoose_1.MongooseModule.forFeature([
                 { name: 'Payment', schema: payment_schema_1.PaymentSchema },
-                { name: 'Booking', schema: booking_schema_1.BookingSchema },
+                { name: 'Booking', schema: booking_model_1.BookingSchema },
             ]),
+            config_1.ConfigModule,
+            email_module_1.EmailModule,
         ],
         providers: [payments_service_1.PaymentsService],
         controllers: [payments_controller_1.PaymentsController],

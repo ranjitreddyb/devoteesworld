@@ -47,34 +47,36 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcryptjs"));
 const users_service_1 = require("../users/users.service");
+const email_service_1 = require("../email/email.service");
 let AuthService = class AuthService {
-    constructor(usersService, jwtService) {
+    constructor(usersService, jwtService, emailService) {
         this.usersService = usersService;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
     async register(createUserDto) {
         try {
-            // Check if user exists
             const existingUser = await this.usersService.findByEmail(createUserDto.email);
             if (existingUser) {
                 throw new common_1.BadRequestException('User already exists');
             }
-            // Hash password HERE
             const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-            // Create user with ALREADY HASHED password - skip double hashing
             const user = await this.usersService.create({
                 ...createUserDto,
                 password: hashedPassword,
                 role: 'user',
-            }, true // ← skipPasswordHash = true
-            );
-            // Generate token
+                whatsappNumber: createUserDto.whatsappNumber,
+                language: createUserDto.language || 'en',
+            }, true);
             const payload = {
                 email: user.email,
                 sub: user._id,
                 role: user.role || 'user',
             };
             console.log('✅ User registered:', user.email);
+            this.emailService.sendWelcomeEmail(user.email, user.name).catch(err => {
+                console.warn('⚠️ Failed to send welcome email:', err.message);
+            });
             return {
                 access_token: this.jwtService.sign(payload),
                 user: {
@@ -82,6 +84,8 @@ let AuthService = class AuthService {
                     email: user.email,
                     name: user.name,
                     phoneNumber: user.phoneNumber,
+                    whatsappNumber: user.whatsappNumber,
+                    language: user.language,
                     role: user.role,
                 },
             };
@@ -106,6 +110,8 @@ let AuthService = class AuthService {
                     email: user.email,
                     name: user.name,
                     phoneNumber: user.phoneNumber,
+                    whatsappNumber: user.whatsappNumber,
+                    language: user.language,
                     role: user.role,
                 },
             };
@@ -144,6 +150,8 @@ let AuthService = class AuthService {
                     email: user.email,
                     name: user.name,
                     phoneNumber: user.phoneNumber,
+                    whatsappNumber: user.whatsappNumber,
+                    language: user.language,
                     role: user.role,
                 },
             };
@@ -181,6 +189,7 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -10,6 +10,8 @@ export declare class AuthController {
             email: string;
             name: string;
             phoneNumber: string;
+            whatsappNumber: string;
+            language: string;
             role: string;
         };
     }>;
@@ -23,6 +25,8 @@ export declare class AuthController {
             email: string;
             name: string;
             phoneNumber: string;
+            whatsappNumber: string;
+            language: string;
             role: string;
         };
     }>;
@@ -33,6 +37,8 @@ export declare class AuthController {
             email: string;
             name: string;
             phoneNumber: string;
+            whatsappNumber: string;
+            language: string;
             role: string;
         };
     }>;
